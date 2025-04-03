@@ -299,6 +299,17 @@ require('lazy').setup({
     end,
   },
 
+  {
+    'jose-elias-alvarez/null-ls.nvim', -- Required for integration with Prettier
+    config = function()
+      require('null-ls').setup {
+        sources = {
+          require('null-ls').builtins.formatting.prettier,
+        },
+      }
+    end,
+  },
+
   -- NOTE: Plugins can also be configured to run Lua code when they are loaded.
   --
   -- This is often very useful to both group configuration, as well as handle
