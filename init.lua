@@ -292,6 +292,13 @@ require('lazy').setup({
     end,
   },
 
+  {
+    'nvim-treesitter/nvim-treesitter-context', -- Correct plugin repository
+    config = function()
+      require('treesitter-context').setup() -- Initialize the plugin
+    end,
+  },
+
   -- NOTE: Plugins can also be configured to run Lua code when they are loaded.
   --
   -- This is often very useful to both group configuration, as well as handle
