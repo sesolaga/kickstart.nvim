@@ -217,6 +217,27 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   end,
 })
 
+-- Disable Autoformat by default and create disable/enable user commands
+vim.g.disable_autoformat = true
+vim.api.nvim_create_user_command('FormatDisable', function(args)
+  if args.bang then
+    -- FormatDisable! will disable formatting just for this buffer
+    vim.b.disable_autoformat = true
+  else
+    vim.g.disable_autoformat = true
+  end
+end, {
+  desc = 'Disable autoformat-on-save',
+  bang = true,
+})
+
+vim.api.nvim_create_user_command('FormatEnable', function()
+  vim.b.disable_autoformat = false
+  vim.g.disable_autoformat = false
+end, {
+  desc = 'Re-enable autoformat-on-save',
+})
+
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
@@ -286,6 +307,9 @@ require('lazy').setup({
     dependencies = {
       'nvim-tree/nvim-web-devicons',
     },
+    keys = {
+      { '<leader>e', ':NvimTreeToggle<CR>', desc = 'Toggle File Explorer' },
+    },
     config = function()
       require('nvim-tree').setup {
         view = {
@@ -333,8 +357,7 @@ require('lazy').setup({
         end,
         desc = 'File history',
       },
-      { '<leader>dn', ':DiffviewNext<CR>', desc = 'Go to next change' },
-      { '<leader>dp', ':DiffviewPrev<CR>', desc = 'Go to previous change' },
+      { '<leader>dc', ':DiffviewClose<CR>', desc = 'Close Diffview' },
     },
     config = function()
       require('diffview').setup {
@@ -820,6 +843,10 @@ require('lazy').setup({
     opts = {
       notify_on_error = false,
       format_on_save = function(bufnr)
+        -- Disable with a global or buffer-local variable
+        if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
+          return
+        end
         -- Disable "format_on_save lsp_fallback" for languages that don't
         -- have a well standardized coding style. You can add additional
         -- languages here or re-enable it for the disabled ones.
