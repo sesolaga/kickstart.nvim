@@ -998,6 +998,43 @@ require('lazy').setup({
       require('auto-save').setup {}
     end,
   },
+  {
+    'folke/persistence.nvim',
+    event = 'BufReadPre', -- start before reading the file
+    opts = {
+      options = { 'buffers', 'curdir', 'tabpages', 'winsize' }, -- what to save
+    },
+    keys = {
+      {
+        '<leader>qs',
+        function()
+          require('persistence').load()
+        end,
+        desc = 'Restore session for the current directory',
+      },
+      {
+        '<leader>qS',
+        function()
+          require('persistence').select()
+        end,
+        desc = 'Select a session to restore',
+      },
+      {
+        '<leader>ql',
+        function()
+          require('persistence').load { last = true }
+        end,
+        desc = 'Restore last session',
+      },
+      {
+        '<leader>qd',
+        function()
+          require('persistence').stop()
+        end,
+        desc = "Stop persistence, session won't be saved",
+      },
+    },
+  },
 
   { -- Collection of various small independent plugins/modules
     'echasnovski/mini.nvim',
