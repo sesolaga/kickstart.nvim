@@ -991,6 +991,13 @@ require('lazy').setup({
 
   { 'folke/zen-mode.nvim' },
   { 'folke/twilight.nvim' },
+  {
+    'Pocco81/auto-save.nvim',
+    name = 'auto-save', -- 👈 this is what Lazy uses to reference it
+    config = function()
+      require('auto-save').setup {}
+    end,
+  },
 
   { -- Collection of various small independent plugins/modules
     'echasnovski/mini.nvim',
