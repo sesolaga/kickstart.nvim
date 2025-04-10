@@ -327,11 +327,17 @@ require('lazy').setup({
   },
 
   {
-    'jose-elias-alvarez/null-ls.nvim', -- Required for integration with Prettier
+    'jose-elias-alvarez/null-ls.nvim',
     config = function()
-      require('null-ls').setup {
+      local null_ls = require 'null-ls'
+
+      null_ls.setup {
         sources = {
-          require('null-ls').builtins.formatting.prettier,
+          null_ls.builtins.formatting.prettier.with {
+            extra_args = function(params)
+              return { '--stdin-filepath', params.bufname }
+            end,
+          },
         },
       }
     end,
@@ -357,7 +363,7 @@ require('lazy').setup({
         end,
         desc = 'File history',
       },
-      { '<leader>dc', ':DiffviewClose<CR>', desc = 'Close Diffview' },
+      { '<leader>gc', ':DiffviewClose<CR>', desc = 'Close Diffview' },
     },
     config = function()
       require('diffview').setup {
