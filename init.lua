@@ -1022,7 +1022,19 @@ require('lazy').setup({
   -- Highlight todo, notes, etc in comments
   { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
 
-  { 'folke/zen-mode.nvim' },
+  {
+    'folke/zen-mode.nvim',
+    keys = {
+      {
+        '<leader>z',
+        function()
+          require('zen-mode').toggle()
+        end,
+        mode = 'n',
+        desc = 'Toggle Zen Mode',
+      },
+    },
+  },
   { 'folke/twilight.nvim' },
   {
     'Pocco81/auto-save.nvim',
