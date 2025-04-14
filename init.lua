@@ -203,6 +203,12 @@ vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right win
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
+-- Map Ctrl + Tab to switch to the next buffer
+vim.keymap.set('n', '<C-n>', ':bnext<CR>', { noremap = true, silent = true })
+
+-- Map Ctrl + Shift + Tab to switch to the previous buffer
+vim.keymap.set('n', '<C-p>', ':bprev<CR>', { noremap = true, silent = true })
+
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 
@@ -1024,6 +1030,18 @@ require('lazy').setup({
 
   {
     'folke/zen-mode.nvim',
+    config = function()
+      require('zen-mode').setup {
+        window = {
+          width = 130, -- Set width to 130 columns
+          options = {
+            signcolumn = 'no', -- Disable sign column
+            number = false, -- Disable line numbers
+            relativenumber = false, -- Disable relative numbers
+          },
+        },
+      }
+    end,
     keys = {
       {
         '<leader>z',
