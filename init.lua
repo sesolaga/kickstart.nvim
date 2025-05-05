@@ -209,6 +209,10 @@ vim.keymap.set('n', '<C-n>', ':bnext<CR>', { noremap = true, silent = true })
 -- Map Ctrl + Shift + Tab to switch to the previous buffer
 vim.keymap.set('n', '<C-p>', ':bprev<CR>', { noremap = true, silent = true })
 
+-- Tab navigation keymaps using vim.keymap.set (this messes up C-I jump forward command)
+-- vim.keymap.set('n', '<Tab>', ':tabnext<CR>', { noremap = true })
+-- vim.keymap.set('n', '<S-Tab>', ':tabprevious<CR>', { noremap = true })
+
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 
@@ -243,6 +247,9 @@ vim.api.nvim_create_user_command('FormatEnable', function()
 end, {
   desc = 'Re-enable autoformat-on-save',
 })
+
+-- Detect python binary
+vim.g.python3_host_prog = os.getenv 'VIRTUAL_ENV' and os.getenv 'VIRTUAL_ENV' .. '/bin/python' or '/usr/bin/python3'
 
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
@@ -314,7 +321,9 @@ require('lazy').setup({
       'nvim-tree/nvim-web-devicons',
     },
     keys = {
-      { '<leader>e', ':NvimTreeToggle<CR>', desc = 'Toggle File Explorer' },
+      { '<leader>nt', ':NvimTreeToggle<CR>', desc = 'Toggle File Explorer' },
+      { '<leader>nc', ':NvimTreeFindFile<CR>', desc = 'Focus on current buffer in NvimTree' },
+      { '<leader>nf', ':NvimTreeFocus<CR>', desc = 'Focus on current File Explorer' },
     },
     config = function()
       require('nvim-tree').setup {
@@ -339,11 +348,22 @@ require('lazy').setup({
 
       null_ls.setup {
         sources = {
+          -- Javascript / Web
           null_ls.builtins.formatting.prettier.with {
+            filetypes = { 'javascript', 'javascriptreact', 'typescript', 'typescriptreact', 'json', 'css', 'scss', 'html', 'php' },
             extra_args = function(params)
               return { '--stdin-filepath', params.bufname }
             end,
           },
+          -- Python
+          null_ls.builtins.formatting.black, -- Auto-format Python code
+          null_ls.builtins.formatting.isort, -- Sort Python imports
+          null_ls.builtins.diagnostics.flake8.with {
+            extra_args = { '--max-line-length', '120' },
+          }, --  linter: catches issues like unused variables, bad naming, missing imports
+          null_ls.builtins.diagnostics.mypy.with {
+            command = vim.fn.expand '$PWD' .. '/.venv/bin/mypy',
+          }, -- type checker: checks if your types (annotations) are correct
         },
       }
     end,
@@ -555,6 +575,36 @@ require('lazy').setup({
           prompt_title = 'Live Grep in Open Files',
         }
       end, { desc = '[S]earch [/] in Open Files' })
+
+      -- Open live grep results in Quick Fix window
+      local actions = require 'telescope.actions'
+      local action_state = require 'telescope.actions.state'
+
+      local function grep_to_qflist()
+        builtin.live_grep {
+          attach_mappings = function(_, map)
+            map('i', '<CR>', function(prompt_bufnr)
+              actions.send_to_qflist(prompt_bufnr)
+              actions.open_qflist()
+            end)
+            map('n', '<CR>', function(prompt_bufnr)
+              actions.send_to_qflist(prompt_bufnr)
+              actions.open_qflist()
+            end)
+            return true
+          end,
+        }
+      end
+
+      vim.keymap.set('n', '<leader>sgq', grep_to_qflist, { desc = '[S]earch by [G]rep → [Q]uickfix list' })
+
+      -- Navigate quickfix list
+      vim.keymap.set('n', ']q', ':cnext<CR>', { desc = 'Next item in quickfix list' })
+      vim.keymap.set('n', '[q', ':cprev<CR>', { desc = 'Previous item in quickfix list' })
+
+      -- Open/close quickfix window
+      vim.keymap.set('n', '<leader>qo', ':copen<CR>', { desc = 'Open quickfix window' })
+      vim.keymap.set('n', '<leader>qc', ':cclose<CR>', { desc = 'Close quickfix window' })
 
       -- Shortcut for searching your Neovim configuration files
       vim.keymap.set('n', '<leader>sn', function()
@@ -775,7 +825,7 @@ require('lazy').setup({
       local servers = {
         -- clangd = {},
         -- gopls = {},
-        -- pyright = {},
+        pyright = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
@@ -830,6 +880,25 @@ require('lazy').setup({
             -- This handles overriding only values explicitly passed
             -- by the server configuration above. Useful when disabling
             -- certain features of an LSP (for example, turning off formatting for ts_ls)
+
+            -- Special setup for Pyright
+            if server_name == 'pyright' then
+              server.before_init = function(_, config)
+                -- Find the nearest ancestor with .git as project root
+                local root_dir = vim.fs.dirname(vim.fs.find({ '.git' }, { upward = true })[1])
+                if not root_dir then
+                  return
+                end
+
+                local venv_python = root_dir .. '/.venv/bin/python'
+                if vim.fn.filereadable(venv_python) == 1 then
+                  config.settings = config.settings or {}
+                  config.settings.python = config.settings.python or {}
+                  config.settings.python.pythonPath = venv_python
+                end
+              end
+            end
+
             server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
             require('lspconfig')[server_name].setup(server)
           end,
@@ -883,6 +952,15 @@ require('lazy').setup({
         -- javascript = { "prettierd", "prettier", stop_after_first = true },
       },
     },
+  },
+
+  -- Github copilot
+  {
+    'github/copilot.vim',
+    config = function()
+      vim.g.copilot_no_tab_map = true
+      vim.api.nvim_set_keymap('i', '<C-J>', 'copilot#Accept("<CR>")', { expr = true, silent = true })
+    end,
   },
 
   { -- Autocompletion
@@ -1142,7 +1220,22 @@ require('lazy').setup({
     main = 'nvim-treesitter.configs', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' },
+      ensure_installed = {
+        'bash',
+        'c',
+        'diff',
+        'html',
+        'lua',
+        'luadoc',
+        'markdown',
+        'markdown_inline',
+        'query',
+        'vim',
+        'vimdoc',
+        'python',
+        'javascript',
+        'css',
+      },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
@@ -1172,11 +1265,11 @@ require('lazy').setup({
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
   --
   -- require 'kickstart.plugins.debug',
-  -- require 'kickstart.plugins.indent_line',
+  require 'kickstart.plugins.indent_line',
   -- require 'kickstart.plugins.lint',
   -- require 'kickstart.plugins.autopairs',
   -- require 'kickstart.plugins.neo-tree',
-  -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
+  require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
