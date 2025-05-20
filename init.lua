@@ -267,6 +267,19 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
 end ---@diagnostic disable-next-line: undefined-field
 vim.opt.rtp:prepend(lazypath)
 
+-- Toggle git-ignored files on/off in nvim-tree
+local git_ignore_enabled = true
+function _G.ToggleGitIgnored()
+  git_ignore_enabled = not git_ignore_enabled
+  require('nvim-tree').setup {
+    filters = {
+      git_ignored = git_ignore_enabled,
+    },
+  }
+  require('nvim-tree.api').tree.reload()
+  vim.notify('Git ignored files ' .. (git_ignore_enabled and 'hidden' or 'visible'))
+end
+
 -- [[ Configure and install plugins ]]
 --
 --  To check the current status of your plugins, run
@@ -336,11 +349,21 @@ require('lazy').setup({
       { '<leader>nt', ':NvimTreeToggle<CR>', desc = 'Toggle File Explorer' },
       { '<leader>nc', ':NvimTreeFindFile<CR>', desc = 'Focus on current buffer in NvimTree' },
       { '<leader>nf', ':NvimTreeFocus<CR>', desc = 'Focus on current File Explorer' },
+      {
+        '<leader>ni',
+        function()
+          ToggleGitIgnored()
+        end,
+        desc = 'Toggle Git Ignored Files in NvimTree',
+      },
     },
     config = function()
       require('nvim-tree').setup {
         view = {
           width = 60,
+        },
+        filters = {
+          git_ignored = git_ignore_enabled, -- use the shared var
         },
       }
     end,
