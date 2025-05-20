@@ -276,7 +276,9 @@ function _G.ToggleGitIgnored()
       git_ignored = git_ignore_enabled,
     },
   }
-  require('nvim-tree.api').tree.reload()
+  local api = require 'nvim-tree.api'
+  api.tree.reload()
+  api.tree.open()
   vim.notify('Git ignored files ' .. (git_ignore_enabled and 'hidden' or 'visible'))
 end
 
