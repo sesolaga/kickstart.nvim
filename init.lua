@@ -209,6 +209,10 @@ vim.keymap.set('n', '<C-n>', ':bnext<CR>', { noremap = true, silent = true })
 -- Map Ctrl + Shift + Tab to switch to the previous buffer
 vim.keymap.set('n', '<C-p>', ':bprev<CR>', { noremap = true, silent = true })
 
+-- Keymaps to enable/disable Copilot manually
+vim.keymap.set('n', '<leader>ce', ':Copilot enable<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>cd', ':Copilot disable<CR>', { noremap = true, silent = true })
+
 -- Tab navigation keymaps using vim.keymap.set (this messes up C-I jump forward command)
 -- vim.keymap.set('n', '<Tab>', ':tabnext<CR>', { noremap = true })
 -- vim.keymap.set('n', '<S-Tab>', ':tabprevious<CR>', { noremap = true })
@@ -310,6 +314,14 @@ require('lazy').setup({
         topdelete = { text = '‾' },
         changedelete = { text = '~' },
       },
+    },
+  },
+
+  {
+    'LunarVim/bigfile.nvim',
+    lazy = false,
+    opts = {
+      filesize = 0.3, -- MB (default is 1)
     },
   },
 
@@ -528,11 +540,26 @@ require('lazy').setup({
         -- You can put your default mappings / updates / etc. in here
         --  All the info you're looking for is in `:help telescope.setup()`
         --
-        -- defaults = {
-        --   mappings = {
-        --     i = { ['<c-enter>'] = 'to_fuzzy_refine' },
-        --   },
-        -- },
+        defaults = {
+          layout_strategy = 'horizontal',
+          layout_config = {
+            horizontal = {
+              width = 0.9,
+              preview_width = 0.7,
+              prompt_position = 'bottom',
+              preview_cutoff = 1,
+            },
+          },
+          path_display = {
+            -- truncate = 3, -- shows last 3 path segments; increase for longer paths
+            'smart', -- dynamically shows full or short paths
+            -- "tail", -- only the filename
+            -- "absolute" -- full path
+          },
+          -- mappings = {
+          --   i = { ['<c-enter>'] = 'to_fuzzy_refine' },
+          -- },
+        },
         -- pickers = {}
         extensions = {
           ['ui-select'] = {
@@ -596,7 +623,7 @@ require('lazy').setup({
         }
       end
 
-      vim.keymap.set('n', '<leader>sgq', grep_to_qflist, { desc = '[S]earch by [G]rep → [Q]uickfix list' })
+      vim.keymap.set('n', '<leader>sq', grep_to_qflist, { desc = '[S]earch by Grep → [Q]uickfix list' })
 
       -- Navigate quickfix list
       vim.keymap.set('n', ']q', ':cnext<CR>', { desc = 'Next item in quickfix list' })
@@ -957,8 +984,12 @@ require('lazy').setup({
   -- Github copilot
   {
     'github/copilot.vim',
-    config = function()
+    cmd = 'Copilot', -- Load only when a Copilot command is invoked
+    init = function()
       vim.g.copilot_no_tab_map = true
+    end,
+    config = function()
+      -- Optional: Copilot accept suggestion
       vim.api.nvim_set_keymap('i', '<C-J>', 'copilot#Accept("<CR>")', { expr = true, silent = true })
     end,
   },
@@ -1191,6 +1222,7 @@ require('lazy').setup({
       -- Add/delete/replace surroundings (brackets, quotes, etc.)
       --
       -- - saiw) - [S]urround [A]dd [I]nner [W]ord [)]Paren
+      -- - saib' - [S]urround [A]dd [I]nner [B]rackets [']quotes
       -- - sd'   - [S]urround [D]elete [']quotes
       -- - sr)'  - [S]urround [R]eplace [)] [']
       require('mini.surround').setup()
@@ -1246,6 +1278,13 @@ require('lazy').setup({
         additional_vim_regex_highlighting = { 'ruby' },
       },
       indent = { enable = true, disable = { 'ruby' } },
+      highlight = {
+        enable = true,
+        disable = function(lang, buf)
+          local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(buf))
+          return ok and stats and stats.size > 1024 * 300
+        end,
+      },
     },
     -- There are additional nvim-treesitter modules that you can use to interact
     -- with nvim-treesitter. You should go explore a few and see what interests you:
@@ -1275,7 +1314,7 @@ require('lazy').setup({
   --    This is the easiest way to modularize your config.
   --
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
-  -- { import = 'custom.plugins' },
+  { import = 'custom.plugins' },
   --
   -- For additional information with loading, sourcing and examples see `:help lazy.nvim-🔌-plugin-spec`
   -- Or use telescope!
