@@ -938,6 +938,14 @@ require('lazy').setup({
       vim.api.nvim_set_hl(0, '@lsp.type.property', { fg = pink })
       vim.api.nvim_set_hl(0, '@variable.member', { fg = pink })
 
+      -- Italic types (Aura Dracula Spirit style)
+      vim.api.nvim_set_hl(0, '@type', { fg = '#82e2ff', italic = true })
+      vim.api.nvim_set_hl(0, '@type.definition', { fg = '#82e2ff', italic = true })
+      vim.api.nvim_set_hl(0, '@lsp.type.type', { fg = '#82e2ff', italic = true })
+      vim.api.nvim_set_hl(0, '@lsp.type.interface', { fg = '#82e2ff', italic = true })
+      vim.api.nvim_set_hl(0, '@lsp.type.class', { fg = '#82e2ff', italic = true })
+      vim.api.nvim_set_hl(0, '@lsp.type.enum', { fg = '#82e2ff', italic = true })
+
       vim.api.nvim_set_hl(0, 'Search', { bg = '#3d375e', fg = 'NONE' })
       vim.api.nvim_set_hl(0, 'IncSearch', { bg = '#3d375e', fg = 'NONE' })
       vim.api.nvim_set_hl(0, 'CurSearch', { bg = '#4d4578', fg = 'NONE' })
