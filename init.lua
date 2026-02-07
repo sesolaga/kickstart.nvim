@@ -879,6 +879,7 @@ require('lazy').setup({
         -- By default, you may press `<c-space>` to show the documentation.
         -- Optionally, set `auto_show = true` to show the documentation after a delay.
         documentation = { auto_show = false, auto_show_delay_ms = 500 },
+        menu = { direction_priority = { 's', 'n' } },
       },
 
       sources = {
@@ -897,7 +898,13 @@ require('lazy').setup({
       fuzzy = { implementation = 'lua' },
 
       -- Shows a signature help window while you type arguments for a function
-      signature = { enabled = true },
+      signature = {
+        enabled = true,
+        window = {
+          direction_priority = { 'n', 's' },
+          border = 'rounded',
+        },
+      },
     },
   },
 
@@ -945,6 +952,9 @@ require('lazy').setup({
       vim.api.nvim_set_hl(0, '@lsp.type.interface', { fg = '#82e2ff', italic = true })
       vim.api.nvim_set_hl(0, '@lsp.type.class', { fg = '#82e2ff', italic = true })
       vim.api.nvim_set_hl(0, '@lsp.type.enum', { fg = '#82e2ff', italic = true })
+
+      vim.api.nvim_set_hl(0, 'BlinkCmpSignatureHelp', { bg = '#2e2b40' })
+      vim.api.nvim_set_hl(0, 'BlinkCmpSignatureHelpBorder', { fg = '#4d4578', bg = '#2e2b40' })
 
       vim.api.nvim_set_hl(0, 'LspReferenceText', { bg = '#3d375e' })
       vim.api.nvim_set_hl(0, 'LspReferenceRead', { bg = '#3d375e' })
