@@ -157,12 +157,20 @@ vim.o.inccommand = 'split'
 vim.o.cursorline = true
 
 -- Minimal number of screen lines to keep above and below the cursor.
-vim.o.scrolloff = 10
+vim.o.scrolloff = 50
 
 -- if performing an operation that would fail due to unsaved changes in the buffer (like `:q`),
 -- instead raise a dialog asking if you wish to save the current file(s)
 -- See `:help 'confirm'`
 vim.o.confirm = true
+
+-- Folding method
+vim.o.foldmethod = 'expr'
+vim.o.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
+-- To start with everything unfolded
+vim.o.foldlevel = 99
+
+-- Cursor style (color and blink set after theme loads below)
 
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
@@ -256,6 +264,100 @@ rtp:prepend(lazypath)
 -- NOTE: Here is where you install your plugins.
 require('lazy').setup({
   -- NOTE: Plugins can be added via a link or github org/name. To run setup automatically, use `opts = {}`
+
+  -- Inline diagnostic messages
+  {
+    'rachartier/tiny-inline-diagnostic.nvim',
+    event = 'VeryLazy',
+    priority = 1000,
+    config = function()
+      require('tiny-inline-diagnostic').setup()
+      vim.diagnostic.config { virtual_text = false } -- Disable Neovim's default virtual text diagnostics
+    end,
+  },
+
+  -- Side-by-side diff
+  {
+    'sindrets/diffview.nvim',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+    },
+    keys = {
+      {
+        '<leader>gg',
+        function()
+          local lib = require 'diffview.lib'
+          if lib.get_current_view() then
+            vim.cmd 'DiffviewClose'
+          else
+            vim.cmd 'DiffviewOpen'
+          end
+        end,
+        desc = 'Toggle Diffview',
+      },
+      {
+        '<leader>gh',
+        function()
+          local lib = require 'diffview.lib'
+          if lib.get_current_view() then
+            vim.cmd 'DiffviewClose'
+          else
+            vim.cmd 'DiffviewFileHistory'
+          end
+        end,
+        desc = 'File history',
+      },
+    },
+    config = function()
+      require('diffview').setup {
+        -- optional config
+        use_icons = true,
+        enhanced_diff_hl = true,
+      }
+    end,
+  },
+
+  -- Work with several variants of the word at once
+  { 'tpope/vim-abolish' },
+
+  -- Optional: haskell-tools.nvim
+  {
+    'mrcjkb/haskell-tools.nvim',
+    ft = { 'haskell', 'lhaskell' },
+    dependencies = {
+      'nvim-treesitter/nvim-treesitter',
+      'neovim/nvim-lspconfig',
+      -- other dependencies like nvim-dap for debugging
+    },
+    config = function() require('haskell-tools').setup {} end,
+  },
+
+  -- Zen mode
+  {
+    'folke/zen-mode.nvim',
+    config = function()
+      require('zen-mode').setup {
+        window = {
+          width = 120,
+          options = {
+            signcolumn = 'no', -- Disable sign column
+            number = false, -- Disable line numbers
+            relativenumber = false, -- Disable relative numbers
+          },
+        },
+      }
+    end,
+    keys = {
+      {
+        '<leader>z',
+        function() require('zen-mode').toggle() end,
+        mode = 'n',
+        desc = 'Toggle Zen Mode',
+      },
+    },
+  },
+  { 'folke/twilight.nvim', opts = { context = 15 } },
+
   { 'NMAC427/guess-indent.nvim', opts = {} },
 
   -- Alternatively, use `config = function() ... end` for full control over the configuration.
@@ -549,29 +651,29 @@ require('lazy').setup({
           --    See `:help CursorHold` for information about when this is executed
           --
           -- When you move your cursor, the highlights will be cleared (the second autocommand).
-          local client = vim.lsp.get_client_by_id(event.data.client_id)
-          if client and client:supports_method('textDocument/documentHighlight', event.buf) then
-            local highlight_augroup = vim.api.nvim_create_augroup('kickstart-lsp-highlight', { clear = false })
-            vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
-              buffer = event.buf,
-              group = highlight_augroup,
-              callback = vim.lsp.buf.document_highlight,
-            })
-
-            vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
-              buffer = event.buf,
-              group = highlight_augroup,
-              callback = vim.lsp.buf.clear_references,
-            })
-
-            vim.api.nvim_create_autocmd('LspDetach', {
-              group = vim.api.nvim_create_augroup('kickstart-lsp-detach', { clear = true }),
-              callback = function(event2)
-                vim.lsp.buf.clear_references()
-                vim.api.nvim_clear_autocmds { group = 'kickstart-lsp-highlight', buffer = event2.buf }
-              end,
-            })
-          end
+          -- local client = vim.lsp.get_client_by_id(event.data.client_id)
+          -- if client and client:supports_method('textDocument/documentHighlight', event.buf) then
+          --   local highlight_augroup = vim.api.nvim_create_augroup('kickstart-lsp-highlight', { clear = false })
+          --   vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
+          --     buffer = event.buf,
+          --     group = highlight_augroup,
+          --     callback = vim.lsp.buf.document_highlight,
+          --   })
+          --
+          --   vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
+          --     buffer = event.buf,
+          --     group = highlight_augroup,
+          --     callback = vim.lsp.buf.clear_references,
+          --   })
+          --
+          --   vim.api.nvim_create_autocmd('LspDetach', {
+          --     group = vim.api.nvim_create_augroup('kickstart-lsp-detach', { clear = true }),
+          --     callback = function(event2)
+          --       vim.lsp.buf.clear_references()
+          --       vim.api.nvim_clear_autocmds { group = 'kickstart-lsp-highlight', buffer = event2.buf }
+          --     end,
+          --   })
+          -- end
 
           -- The following code creates a keymap to toggle inlay hints in your
           -- code, if the language server you are using supports them
@@ -596,13 +698,14 @@ require('lazy').setup({
         -- clangd = {},
         -- gopls = {},
         -- pyright = {},
-        -- rust_analyzer = {},
         --
         -- Some languages (like typescript) have entire language plugins that can be useful:
         --    https://github.com/pmizio/typescript-tools.nvim
         --
         -- But for many setups, the LSP (`ts_ls`) will work just fine
-        -- ts_ls = {},
+        ts_ls = {},
+        rust_analyzer = {},
+        hls = {},
       }
 
       -- Ensure the servers and tools above are installed
@@ -612,12 +715,13 @@ require('lazy').setup({
       --    :Mason
       --
       -- You can press `g?` for help in this menu.
-      local ensure_installed = vim.tbl_keys(servers or {})
-      vim.list_extend(ensure_installed, {
-        'lua_ls', -- Lua Language server
-        'stylua', -- Used to format Lua code
-        -- You can add other tools here that you want Mason to install
-      })
+      local ensure_installed = {
+        'lua-language-server',
+        'stylua',
+        'haskell-language-server',
+        'rust-analyzer',
+        'typescript-language-server',
+      }
 
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
@@ -686,6 +790,15 @@ require('lazy').setup({
       end,
       formatters_by_ft = {
         lua = { 'stylua' },
+        javascript = { 'prettier' },
+        javascriptreact = { 'prettier' },
+        typescript = { 'prettier' },
+        typescriptreact = { 'prettier' },
+        css = { 'prettier' },
+        html = { 'prettier' },
+        json = { 'prettier' },
+        yaml = { 'prettier' },
+        markdown = { 'prettier' },
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
         --
@@ -793,20 +906,41 @@ require('lazy').setup({
     -- change the command in the config to whatever the name of that colorscheme is.
     --
     -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
-    'folke/tokyonight.nvim',
+    -- 'folke/tokyonight.nvim',
+    -- 'Mofiqul/dracula.nvim',
+    'baliestri/aura-theme',
     priority = 1000, -- Make sure to load this before all the other start plugins.
-    config = function()
+    config = function(plugin)
       ---@diagnostic disable-next-line: missing-fields
-      require('tokyonight').setup {
-        styles = {
-          comments = { italic = false }, -- Disable italics in comments
-        },
-      }
+      -- require('tokyonight').setup {
+      --   styles = {
+      --     comments = { italic = false }, -- Disable italics in comments
+      --   },
+      -- }
 
       -- Load the colorscheme here.
       -- Like many other themes, this one has different styles, and you could load
       -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-night'
+      -- vim.cmd.colorscheme 'tokyonight-night'
+      -- vim.cmd.colorscheme 'dracula'
+      vim.opt.rtp:append(plugin.dir .. '/packages/neovim')
+      vim.cmd [[colorscheme aura-soft-dark]]
+
+      -- Pinkish keywords and properties (Aura Dracula Spirit style)
+      local pink = '#f694ff'
+      vim.api.nvim_set_hl(0, 'Normal', { bg = '#262335' })
+      vim.api.nvim_set_hl(0, 'NormalFloat', { bg = '#262335' })
+      vim.api.nvim_set_hl(0, 'CursorLine', { bg = '#2e2b40' })
+
+      vim.api.nvim_set_hl(0, '@keyword.import', { fg = pink })
+      vim.api.nvim_set_hl(0, '@keyword.export', { fg = pink })
+      vim.api.nvim_set_hl(0, '@property', { fg = pink })
+      vim.api.nvim_set_hl(0, '@lsp.type.property', { fg = pink })
+      vim.api.nvim_set_hl(0, '@variable.member', { fg = pink })
+
+      vim.api.nvim_set_hl(0, 'Search', { bg = '#3d375e', fg = 'NONE' })
+      vim.api.nvim_set_hl(0, 'IncSearch', { bg = '#3d375e', fg = 'NONE' })
+      vim.api.nvim_set_hl(0, 'CurSearch', { bg = '#4d4578', fg = 'NONE' })
     end,
   },
 
@@ -852,7 +986,7 @@ require('lazy').setup({
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
     config = function()
-      local filetypes = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' }
+      local filetypes = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'typescript', 'tsx', 'vim', 'vimdoc' }
       require('nvim-treesitter').install(filetypes)
       vim.api.nvim_create_autocmd('FileType', {
         pattern = filetypes,
@@ -872,10 +1006,10 @@ require('lazy').setup({
   --
   -- require 'kickstart.plugins.debug',
   -- require 'kickstart.plugins.indent_line',
-  -- require 'kickstart.plugins.lint',
-  -- require 'kickstart.plugins.autopairs',
-  -- require 'kickstart.plugins.neo-tree',
-  -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
+  require 'kickstart.plugins.lint',
+  require 'kickstart.plugins.autopairs',
+  require 'kickstart.plugins.neo-tree',
+  require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
@@ -907,6 +1041,15 @@ require('lazy').setup({
       lazy = '💤 ',
     },
   },
+})
+
+-- Cursor: purple color + blink (runs after all plugins load)
+vim.api.nvim_create_autocmd('VimEnter', {
+  callback = function()
+    vim.api.nvim_set_hl(0, 'Cursor', { fg = '#ffffff', bg = '#a97cfb' })
+    vim.opt.guicursor =
+      'n-v-c-sm:block-Cursor-blinkon250-blinkoff250-blinkwait250,i-ci-ve:ver25-Cursor-blinkon250-blinkoff250-blinkwait250,r-cr-o:hor20-Cursor-blinkon250-blinkoff250-blinkwait250'
+  end,
 })
 
 -- The line beneath this is called `modeline`. See `:help modeline`
