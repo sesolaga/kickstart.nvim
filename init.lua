@@ -164,6 +164,14 @@ vim.o.scrolloff = 50
 -- See `:help 'confirm'`
 vim.o.confirm = true
 
+-- Save all modified buffers after LSP rename or file rename
+local original_rename = vim.lsp.handlers['textDocument/rename']
+vim.lsp.handlers['textDocument/rename'] = function(err, result, ctx, config)
+  if original_rename then original_rename(err, result, ctx, config) end
+  if not err and result then vim.cmd('wa') end
+end
+
+
 -- Folding method
 vim.o.foldmethod = 'expr'
 vim.o.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
