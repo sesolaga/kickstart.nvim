@@ -91,7 +91,10 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
-vim.g.have_nerd_font = false
+vim.g.have_nerd_font = true
+
+-- Enable termguicolors
+vim.opt.termguicolors = true
 
 -- [[ Setting options ]]
 -- See `:help vim.o`
@@ -156,7 +159,7 @@ vim.o.inccommand = 'split'
 -- Show which line your cursor is on
 vim.o.cursorline = true
 
--- Minimal number of screen lines to keep above and below the cursor.
+-- Keep cursor centered vertically
 vim.o.scrolloff = 50
 
 -- if performing an operation that would fail due to unsaved changes in the buffer (like `:q`),
@@ -168,9 +171,8 @@ vim.o.confirm = true
 local original_rename = vim.lsp.handlers['textDocument/rename']
 vim.lsp.handlers['textDocument/rename'] = function(err, result, ctx, config)
   if original_rename then original_rename(err, result, ctx, config) end
-  if not err and result then vim.cmd('wa') end
+  if not err and result then vim.cmd 'wa' end
 end
-
 
 -- Folding method
 vim.o.foldmethod = 'expr'
@@ -204,6 +206,20 @@ vim.diagnostic.config {
 }
 
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
+vim.keymap.set('n', '<leader>bd', '<cmd>bdelete<cr>', { desc = '[B]uffer [D]elete' })
+vim.keymap.set('n', '<leader>bo', function()
+  local cur = vim.api.nvim_get_current_buf()
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    if buf ~= cur and vim.bo[buf].buflisted then vim.api.nvim_buf_delete(buf, { force = false }) end
+  end
+end, { desc = '[B]uffer delete [O]thers' })
+vim.keymap.set('n', '<leader>dc', function()
+  local diag = vim.diagnostic.get(0, { lnum = vim.api.nvim_win_get_cursor(0)[1] - 1 })
+  if #diag > 0 then
+    vim.fn.setreg('+', diag[1].message)
+    vim.notify('Copied: ' .. diag[1].message, vim.log.levels.INFO)
+  end
+end, { desc = '[D]iagnostic [C]opy message' })
 
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
@@ -273,6 +289,33 @@ rtp:prepend(lazypath)
 require('lazy').setup({
   -- NOTE: Plugins can be added via a link or github org/name. To run setup automatically, use `opts = {}`
 
+  -- Always stay vertically centered
+  {
+    'arnamak/stay-centered.nvim',
+  },
+
+  -- Harpoon
+  {
+    'ThePrimeagen/harpoon',
+    branch = 'harpoon2',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    config = function()
+      local harpoon = require 'harpoon'
+      harpoon:setup {}
+
+      vim.keymap.set('n', '<C-e>', function() harpoon.ui:toggle_quick_menu(harpoon:list()) end)
+      vim.keymap.set('n', '<leader>a', function() harpoon:list():add() end)
+
+      vim.keymap.set('n', '<C-j>', function() harpoon:list():select(1) end)
+      vim.keymap.set('n', '<C-k>', function() harpoon:list():select(2) end)
+      vim.keymap.set('n', '<C-l>', function() harpoon:list():select(3) end)
+      vim.keymap.set('n', '<C-;>', function() harpoon:list():select(4) end)
+
+      vim.keymap.set('n', '<S-h>', function() harpoon:list():prev() end, { desc = 'Harpoon prev' })
+      vim.keymap.set('n', '<S-l>', function() harpoon:list():next() end, { desc = 'Harpoon next' })
+      vim.keymap.set('n', '<leader>r', function() harpoon:list():remove() end, { desc = 'Harpoon [R]emove current' })
+    end,
+  },
   -- Inline diagnostic messages
   {
     'rachartier/tiny-inline-diagnostic.nvim',
@@ -303,6 +346,8 @@ require('lazy').setup({
         end,
         desc = 'Toggle Diffview',
       },
+      { '<leader>gs', function() require('diffview.actions').toggle_stage_entry() end, desc = '[G]it [S]tage toggle' },
+      { '<leader>gc', '<cmd>term git commit<CR>', desc = '[G]it [C]ommit' },
       {
         '<leader>gh',
         function()
@@ -331,13 +376,8 @@ require('lazy').setup({
   -- Optional: haskell-tools.nvim
   {
     'mrcjkb/haskell-tools.nvim',
-    ft = { 'haskell', 'lhaskell' },
-    dependencies = {
-      'nvim-treesitter/nvim-treesitter',
-      'neovim/nvim-lspconfig',
-      -- other dependencies like nvim-dap for debugging
-    },
-    config = function() require('haskell-tools').setup {} end,
+    version = '^4',
+    lazy = false,
   },
 
   -- Zen mode
@@ -786,7 +826,7 @@ require('lazy').setup({
         -- Disable "format_on_save lsp_fallback" for languages that don't
         -- have a well standardized coding style. You can add additional
         -- languages here or re-enable it for the disabled ones.
-        local disable_filetypes = { c = true, cpp = true }
+        local disable_filetypes = { c = true, cpp = true, haskell = true }
         if disable_filetypes[vim.bo[bufnr].filetype] then
           return nil
         else
@@ -967,6 +1007,11 @@ require('lazy').setup({
       vim.api.nvim_set_hl(0, 'LspReferenceText', { bg = '#3d375e' })
       vim.api.nvim_set_hl(0, 'LspReferenceRead', { bg = '#3d375e' })
       vim.api.nvim_set_hl(0, 'LspReferenceWrite', { bg = '#3d375e' })
+
+      vim.api.nvim_set_hl(0, 'DiffAdd', { bg = '#1a3a2a' })
+      vim.api.nvim_set_hl(0, 'DiffChange', { bg = '#1a2a3a' })
+      vim.api.nvim_set_hl(0, 'DiffDelete', { bg = '#3a1a2a' })
+      vim.api.nvim_set_hl(0, 'DiffText', { bg = '#2a3a4a' })
 
       vim.api.nvim_set_hl(0, 'Search', { bg = '#3d375e', fg = 'NONE' })
       vim.api.nvim_set_hl(0, 'IncSearch', { bg = '#3d375e', fg = 'NONE' })
