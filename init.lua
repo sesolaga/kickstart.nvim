@@ -160,7 +160,7 @@ vim.o.inccommand = 'split'
 vim.o.cursorline = true
 
 -- Keep cursor centered vertically
-vim.o.scrolloff = 50
+vim.o.scrolloff = 15
 
 -- if performing an operation that would fail due to unsaved changes in the buffer (like `:q`),
 -- instead raise a dialog asking if you wish to save the current file(s)
@@ -204,6 +204,16 @@ vim.diagnostic.config {
   -- Auto open the float, so you can easily read the errors when jumping with `[d` and `]d`
   jump = { float = true },
 }
+
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'rust',
+  callback = function()
+    vim.bo.shiftwidth = 4
+    vim.bo.tabstop = 4
+    vim.bo.softtabstop = 4
+    vim.bo.expandtab = true
+  end,
+})
 
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 vim.keymap.set('n', '<leader>bd', '<cmd>bdelete<cr>', { desc = '[B]uffer [D]elete' })
@@ -309,7 +319,7 @@ require('lazy').setup({
       vim.keymap.set('n', '<C-j>', function() harpoon:list():select(1) end)
       vim.keymap.set('n', '<C-k>', function() harpoon:list():select(2) end)
       vim.keymap.set('n', '<C-l>', function() harpoon:list():select(3) end)
-      vim.keymap.set('n', '<C-;>', function() harpoon:list():select(4) end)
+      vim.keymap.set('n', '<C-f>', function() harpoon:list():select(4) end)
 
       vim.keymap.set('n', '<S-h>', function() harpoon:list():prev() end, { desc = 'Harpoon prev' })
       vim.keymap.set('n', '<S-l>', function() harpoon:list():next() end, { desc = 'Harpoon next' })
@@ -406,7 +416,7 @@ require('lazy').setup({
   },
   { 'folke/twilight.nvim', opts = { context = 15 } },
 
-  { 'NMAC427/guess-indent.nvim', opts = {} },
+  { 'NMAC427/guess-indent.nvim' },
 
   -- Alternatively, use `config = function() ... end` for full control over the configuration.
   -- If you prefer to call `setup` explicitly, use:
@@ -531,11 +541,15 @@ require('lazy').setup({
         -- You can put your default mappings / updates / etc. in here
         --  All the info you're looking for is in `:help telescope.setup()`
         --
-        -- defaults = {
-        --   mappings = {
-        --     i = { ['<c-enter>'] = 'to_fuzzy_refine' },
-        --   },
-        -- },
+        defaults = {
+          mappings = {
+            i = {
+              ['<c-enter>'] = 'to_fuzzy_refine',
+              ['<C-j>'] = require('telescope.actions').cycle_history_next,
+              ['<C-k>'] = require('telescope.actions').cycle_history_prev,
+            },
+          },
+        },
         -- pickers = {}
         extensions = {
           ['ui-select'] = { require('telescope.themes').get_dropdown() },

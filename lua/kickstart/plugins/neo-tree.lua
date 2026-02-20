@@ -22,11 +22,15 @@ return {
     event_handlers = {
       {
         event = 'file_renamed',
-        handler = function() vim.defer_fn(function() vim.cmd('wa') end, 200) end,
+        handler = function()
+          vim.defer_fn(function() vim.cmd 'wa' end, 200)
+        end,
       },
       {
         event = 'file_moved',
-        handler = function() vim.defer_fn(function() vim.cmd('wa') end, 200) end,
+        handler = function()
+          vim.defer_fn(function() vim.cmd 'wa' end, 200)
+        end,
       },
     },
     filesystem = {
@@ -34,6 +38,7 @@ return {
         mappings = {
           ['\\'] = 'close_window',
         },
+        width = 40,
       },
     },
   },
