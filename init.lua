@@ -384,20 +384,20 @@ require('lazy').setup({
         -- optional config
         use_icons = true,
         enhanced_diff_hl = true,
-        hooks = {
-          -- Prevent LSP from attaching to diff buffers (causes slow staging)
-          diff_buf_read = function(bufnr)
-            vim.b[bufnr].diffview_buf = true
-          end,
-        },
       }
-      -- Block LSP from attaching to diffview buffers
-      local _orig_buf_attach = vim.lsp.buf_attach_client
-      vim.lsp.buf_attach_client = function(bufnr, client_id)
-        if vim.b[bufnr] and vim.b[bufnr].diffview_buf then
-          return false
-        end
-        return _orig_buf_attach(bufnr, client_id)
+      -- Prevent LSP from doing work on diffview buffers (causes slow staging)
+      vim.api.nvim_create_autocmd("LspAttach", {
+        callback = function(args)
+          if vim.api.nvim_buf_get_name(args.buf):match("^diffview://") then
+            pcall(vim.lsp.buf_detach_client, args.buf, args.data.client_id)
+          end
+        end,
+      })
+      -- Guard against nil buf_state when diffview cleans up buffers
+      local ct = require('vim.lsp._changetracking')
+      local _orig_reset_buf = ct.reset_buf
+      ct.reset_buf = function(client, bufnr)
+        pcall(_orig_reset_buf, client, bufnr)
       end
     end,
   },
