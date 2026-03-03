@@ -260,6 +260,9 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 -- vim.keymap.set("n", "<C-S-j>", "<C-w>J", { desc = "Move window to the lower" })
 -- vim.keymap.set("n", "<C-S-k>", "<C-w>K", { desc = "Move window to the upper" })
 
+-- Undo tree toggle
+vim.keymap.set('n', '<leader>u', vim.cmd.UndotreeToggle, { desc = 'Toggle Undo Tree' })
+
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 
@@ -298,6 +301,11 @@ rtp:prepend(lazypath)
 -- NOTE: Here is where you install your plugins.
 require('lazy').setup({
   -- NOTE: Plugins can be added via a link or github org/name. To run setup automatically, use `opts = {}`
+
+  -- Undo tree
+  {
+    'mbbill/undotree',
+  },
 
   -- Always stay vertically centered
   {
@@ -376,7 +384,21 @@ require('lazy').setup({
         -- optional config
         use_icons = true,
         enhanced_diff_hl = true,
+        hooks = {
+          -- Prevent LSP from attaching to diff buffers (causes slow staging)
+          diff_buf_read = function(bufnr)
+            vim.b[bufnr].diffview_buf = true
+          end,
+        },
       }
+      -- Block LSP from attaching to diffview buffers
+      local _orig_buf_attach = vim.lsp.buf_attach_client
+      vim.lsp.buf_attach_client = function(bufnr, client_id)
+        if vim.b[bufnr] and vim.b[bufnr].diffview_buf then
+          return false
+        end
+        return _orig_buf_attach(bufnr, client_id)
+      end
     end,
   },
 
@@ -1052,6 +1074,7 @@ require('lazy').setup({
       -- - saiw) - [S]urround [A]dd [I]nner [W]ord [)]Paren
       -- - sd'   - [S]urround [D]elete [']quotes
       -- - sr)'  - [S]urround [R]eplace [)] [']
+      -- - srtt  - [S]urround [R]eplace [T]ag [T]ag
       require('mini.surround').setup()
 
       -- Simple and easy statusline.
@@ -1082,6 +1105,15 @@ require('lazy').setup({
         callback = function() vim.treesitter.start() end,
       })
     end,
+  },
+
+  -- Markdown preview - should be loaded after the colorscheme
+  {
+    'OXY2DEV/markview.nvim',
+    lazy = false,
+
+    -- Completion for `blink.cmp`
+    -- dependencies = { "saghen/blink.cmp" },
   },
 
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
