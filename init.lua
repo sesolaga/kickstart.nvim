@@ -151,7 +151,7 @@ vim.o.splitbelow = true
 --   See `:help lua-options`
 --   and `:help lua-guide-options`
 vim.o.list = true
-vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
+vim.opt.listchars = { tab = '  ', trail = '·', nbsp = '␣' }
 
 -- Preview substitutions live, as you type!
 vim.o.inccommand = 'split'
@@ -173,6 +173,33 @@ vim.lsp.handlers['textDocument/rename'] = function(err, result, ctx, config)
   if original_rename then original_rename(err, result, ctx, config) end
   if not err and result then vim.cmd 'wa' end
 end
+
+-- LSP hover/signature: pink border + padding
+local pink_border = {
+  { '╭', 'FloatBorder' },
+  { '─', 'FloatBorder' },
+  { '╮', 'FloatBorder' },
+  { '│', 'FloatBorder' },
+  { '╯', 'FloatBorder' },
+  { '─', 'FloatBorder' },
+  { '╰', 'FloatBorder' },
+  { '│', 'FloatBorder' },
+}
+
+-- Add vertical padding to LSP float previews (preserve code fences at start/end)
+local orig_open_floating_preview = vim.lsp.util.open_floating_preview
+vim.lsp.util.open_floating_preview = function(contents, syntax, opts, ...)
+  local padded = {}
+  for i, line in ipairs(contents) do
+    if i == 1 and not line:match '^```' then table.insert(padded, '') end
+    table.insert(padded, line)
+  end
+  if #contents > 0 and not contents[#contents]:match '^```' then table.insert(padded, '') end
+  return orig_open_floating_preview(padded, syntax, opts, ...)
+end
+
+vim.keymap.set('n', 'K', function() vim.lsp.buf.hover { border = pink_border, max_width = 120 } end, { desc = 'LSP Hover' })
+vim.keymap.set({ 'n', 'i' }, '<C-k>', function() vim.lsp.buf.signature_help { border = pink_border, max_width = 120 } end, { desc = 'LSP Signature Help' })
 
 -- Folding method
 vim.o.foldmethod = 'expr'
@@ -386,19 +413,15 @@ require('lazy').setup({
         enhanced_diff_hl = true,
       }
       -- Prevent LSP from doing work on diffview buffers (causes slow staging)
-      vim.api.nvim_create_autocmd("LspAttach", {
+      vim.api.nvim_create_autocmd('LspAttach', {
         callback = function(args)
-          if vim.api.nvim_buf_get_name(args.buf):match("^diffview://") then
-            pcall(vim.lsp.buf_detach_client, args.buf, args.data.client_id)
-          end
+          if vim.api.nvim_buf_get_name(args.buf):match '^diffview://' then pcall(vim.lsp.buf_detach_client, args.buf, args.data.client_id) end
         end,
       })
       -- Guard against nil buf_state when diffview cleans up buffers
-      local ct = require('vim.lsp._changetracking')
+      local ct = require 'vim.lsp._changetracking'
       local _orig_reset_buf = ct.reset_buf
-      ct.reset_buf = function(client, bufnr)
-        pcall(_orig_reset_buf, client, bufnr)
-      end
+      ct.reset_buf = function(client, bufnr) pcall(_orig_reset_buf, client, bufnr) end
     end,
   },
 
@@ -1020,7 +1043,8 @@ require('lazy').setup({
       -- Pinkish keywords and properties (Aura Dracula Spirit style)
       local pink = '#f694ff'
       vim.api.nvim_set_hl(0, 'Normal', { bg = '#262335' })
-      vim.api.nvim_set_hl(0, 'NormalFloat', { bg = '#262335' })
+      vim.api.nvim_set_hl(0, 'NormalFloat', { bg = '#1e1a2e' })
+      vim.api.nvim_set_hl(0, 'FloatBorder', { fg = pink, bg = '#1e1a2e' })
       vim.api.nvim_set_hl(0, 'CursorLine', { bg = '#2e2b40' })
 
       vim.api.nvim_set_hl(0, '@keyword.import', { fg = pink })
@@ -1102,7 +1126,10 @@ require('lazy').setup({
       require('nvim-treesitter').install(filetypes)
       vim.api.nvim_create_autocmd('FileType', {
         pattern = filetypes,
-        callback = function() vim.treesitter.start() end,
+        callback = function(args)
+          -- Skip scratch/float buffers (handled by LSP's open_floating_preview)
+          if vim.bo[args.buf].buftype == '' then vim.treesitter.start(args.buf) end
+        end,
       })
     end,
   },
