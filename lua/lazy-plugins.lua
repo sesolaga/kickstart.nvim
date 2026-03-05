@@ -9,16 +9,6 @@
 --    :Lazy update
 --
 require('lazy').setup({
-  -- Undo tree
-  {
-    'mbbill/undotree',
-  },
-
-  -- Always stay vertically centered
-  {
-    'arnamak/stay-centered.nvim',
-  },
-
   -- Harpoon
   {
     'ThePrimeagen/harpoon',
@@ -41,17 +31,6 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>r', function() harpoon:list():remove() end, { desc = 'Harpoon [R]emove current' })
     end,
   },
-  -- Inline diagnostic messages
-  {
-    'rachartier/tiny-inline-diagnostic.nvim',
-    event = 'VeryLazy',
-    priority = 1000,
-    config = function()
-      require('tiny-inline-diagnostic').setup()
-      vim.diagnostic.config { virtual_text = false } -- Disable Neovim's default virtual text diagnostics
-    end,
-  },
-
   -- Side-by-side diff
   {
     'sindrets/diffview.nvim',
@@ -105,16 +84,6 @@ require('lazy').setup({
     end,
   },
 
-  -- Work with several variants of the word at once
-  { 'tpope/vim-abolish' },
-
-  -- Optional: haskell-tools.nvim
-  {
-    'mrcjkb/haskell-tools.nvim',
-    version = '^4',
-    lazy = false,
-  },
-
   -- Zen mode
   {
     'folke/zen-mode.nvim',
@@ -139,24 +108,6 @@ require('lazy').setup({
       },
     },
   },
-  { 'folke/twilight.nvim', opts = { context = 15 } },
-
-  { 'NMAC427/guess-indent.nvim' },
-
-  -- See `:help gitsigns` to understand what the configuration keys do
-  { -- Adds git related signs to the gutter, as well as utilities for managing changes
-    'lewis6991/gitsigns.nvim',
-    opts = {
-      signs = {
-        add = { text = '+' },
-        change = { text = '~' },
-        delete = { text = '_' },
-        topdelete = { text = '‾' },
-        changedelete = { text = '~' },
-      },
-    },
-  },
-
   { -- Useful plugin to show you pending keybinds.
     'folke/which-key.nvim',
     event = 'VimEnter',
@@ -574,9 +525,6 @@ require('lazy').setup({
     end,
   },
 
-  -- Highlight todo, notes, etc in comments
-  { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
-
   { -- Collection of various small independent plugins/modules
     'nvim-mini/mini.nvim',
     config = function()
@@ -611,19 +559,16 @@ require('lazy').setup({
     end,
   },
 
-  -- Markdown preview - should be loaded after the colorscheme
-  {
-    'OXY2DEV/markview.nvim',
-    lazy = false,
-  },
-
   -- Kickstart plugin modules
   -- require 'kickstart.plugins.debug',
   -- require 'kickstart.plugins.indent_line',
   require 'kickstart.plugins.lint',
   require 'kickstart.plugins.autopairs',
   require 'kickstart.plugins.neo-tree',
-  require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
+  require 'kickstart.plugins.gitsigns',
+
+  -- Custom plugins (lua/custom/plugins/*.lua)
+  { import = 'custom.plugins' }
 }, {
   ui = {
     icons = vim.g.have_nerd_font and {} or {
