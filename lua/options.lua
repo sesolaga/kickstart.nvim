@@ -99,4 +99,21 @@ vim.diagnostic.config {
   jump = { float = true },
 }
 
+-- Neovide settings
+if vim.g.neovide then
+  local fonts = {
+    'Dank Mono:h14',
+    'JetBrainsMono Nerd Font:h14',
+  }
+  vim.o.linespace = 6
+  vim.g.font_index = vim.g.font_index or 1
+  vim.o.guifont = fonts[vim.g.font_index]
+
+  vim.keymap.set('n', '<leader>cf', function()
+    vim.g.font_index = (vim.g.font_index % #fonts) + 1
+    vim.o.guifont = fonts[vim.g.font_index]
+    vim.defer_fn(function() vim.notify('Font: ' .. fonts[vim.g.font_index], vim.log.levels.INFO) end, 100)
+  end, { desc = '[C]ycle [F]ont' })
+end
+
 -- vim: ts=2 sts=2 sw=2 et

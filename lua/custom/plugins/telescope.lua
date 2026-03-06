@@ -17,6 +17,9 @@ return {
     -- See `:help telescope` and `:help telescope.setup()`
     require('telescope').setup {
       defaults = {
+        layout_config = {
+          horizontal = { preview_width = 0.55 },
+        },
         mappings = {
           i = {
             ['<c-enter>'] = 'to_fuzzy_refine',

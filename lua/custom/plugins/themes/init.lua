@@ -4,6 +4,10 @@
 local themes = {
   require 'custom.plugins.themes.aura',
   require 'custom.plugins.themes.tokyonight',
+  require 'custom.plugins.themes.tokyonight-default',
+  require 'custom.plugins.themes.kanagawa',
+  require 'custom.plugins.themes.melange',
+  require 'custom.plugins.themes.dracula',
 }
 
 -- Collect all plugin specs so lazy.nvim installs them
@@ -23,7 +27,7 @@ local function apply_theme(index)
   vim.cmd.colorscheme(theme.colorscheme)
   if theme.highlights then theme.highlights() end
   if theme.cursor then theme.cursor() end
-  vim.notify('Theme: ' .. theme.colorscheme, vim.log.levels.INFO)
+  vim.schedule(function() vim.notify('Theme: ' .. theme.colorscheme, vim.log.levels.INFO) end)
 end
 
 -- Apply on startup (after all plugins load)
@@ -47,7 +51,15 @@ table.insert(specs, {
         local next_index = (vim.g.theme_index % #themes) + 1
         apply_theme(next_index)
       end,
-      desc = '[C]ycle [T]heme',
+      desc = '[C]ycle [T]heme forward',
+    },
+    {
+      '<leader>cT',
+      function()
+        local prev_index = (vim.g.theme_index - 2) % #themes + 1
+        apply_theme(prev_index)
+      end,
+      desc = '[C]ycle [T]heme backward',
     },
   },
 })
