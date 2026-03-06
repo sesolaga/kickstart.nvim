@@ -4,7 +4,10 @@ return {
   opts = {
     suppressed_dirs = { '~/Downloads', '/tmp' },
     auto_save = true,
-    pre_save_cmds = { 'silent! wa' },
+    auto_create = true,
+    args_allow_single_directory = true,
+    args_allow_files_auto_save = true,
+    pre_save_cmds = { 'silent! wa', 'Neotree close' },
     -- Show session picker when opening nvim in home dir with no args
     no_restore_cmds = {
       function()
@@ -18,5 +21,6 @@ return {
   },
   keys = {
     { '<leader>sp', '<cmd>AutoSession search<cr>', desc = '[S]earch [P]rojects (sessions)' },
+    { '<leader>ss', '<cmd>AutoSession save<cr>', desc = '[S]ession [S]ave' },
   },
 }

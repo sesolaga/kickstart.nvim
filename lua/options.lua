@@ -4,6 +4,11 @@
 -- Enable termguicolors
 vim.opt.termguicolors = true
 
+-- Default indent settings (guess-indent overrides per file)
+vim.o.tabstop = 2
+vim.o.shiftwidth = 2
+vim.o.expandtab = true
+
 -- Make line numbers default
 vim.o.number = true
 -- You can also add relative line numbers, to help with jumping.
