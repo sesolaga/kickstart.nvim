@@ -114,6 +114,12 @@ if vim.g.neovide then
   vim.g.font_index = vim.g.font_index or 1
   vim.o.guifont = fonts[vim.g.font_index]
 
+  -- Paste from system clipboard
+  vim.keymap.set({ 'n', 'v' }, '<C-S-v>', '"+p', { desc = 'Paste from clipboard' })
+  vim.keymap.set('i', '<C-S-v>', '<C-r>+', { desc = 'Paste from clipboard' })
+  vim.keymap.set('c', '<C-S-v>', '<C-r>+', { desc = 'Paste from clipboard' })
+  vim.keymap.set('t', '<C-S-v>', '<C-\\><C-n>"+pi', { desc = 'Paste from clipboard' })
+
   vim.keymap.set('n', '<leader>cf', function()
     vim.g.font_index = (vim.g.font_index % #fonts) + 1
     vim.o.guifont = fonts[vim.g.font_index]

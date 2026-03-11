@@ -36,7 +36,7 @@ return {
     end
 
     vim.keymap.set('n', 'K', function() vim.lsp.buf.hover { border = pink_border, max_width = 120 } end, { desc = 'LSP Hover' })
-    vim.keymap.set({ 'n', 'i' }, '<C-k>', function() vim.lsp.buf.signature_help { border = pink_border, max_width = 120 } end, { desc = 'LSP Signature Help' })
+    vim.keymap.set('i', '<C-k>', function() vim.lsp.buf.signature_help { border = pink_border, max_width = 120 } end, { desc = 'LSP Signature Help' })
 
     --  This function gets run when an LSP attaches to a particular buffer.
     vim.api.nvim_create_autocmd('LspAttach', {
