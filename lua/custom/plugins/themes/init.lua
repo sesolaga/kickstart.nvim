@@ -16,8 +16,28 @@ for _, theme in ipairs(themes) do
   table.insert(specs, theme.spec)
 end
 
+-- Persist default theme across sessions
+local cache_file = vim.fn.stdpath 'data' .. '/theme_index'
+
+local function load_default_index()
+  local f = io.open(cache_file, 'r')
+  if f then
+    local idx = tonumber(f:read '*a')
+    f:close()
+    return idx
+  end
+end
+
+local function save_default_index(index)
+  local f = io.open(cache_file, 'w')
+  if f then
+    f:write(tostring(index))
+    f:close()
+  end
+end
+
 -- Active theme index (persisted in vim.g for runtime access)
-vim.g.theme_index = vim.g.theme_index or 1
+vim.g.theme_index = vim.g.theme_index or load_default_index() or 1
 
 -- Apply the active theme's colorscheme + highlights + cursor
 local function apply_theme(index)
@@ -60,6 +80,14 @@ table.insert(specs, {
         apply_theme(prev_index)
       end,
       desc = '[C]ycle [T]heme backward',
+    },
+    {
+      '<leader>cs',
+      function()
+        save_default_index(vim.g.theme_index)
+        vim.notify('Default theme saved: ' .. themes[vim.g.theme_index].colorscheme, vim.log.levels.INFO)
+      end,
+      desc = '[C]olor [S]ave as default',
     },
   },
 })

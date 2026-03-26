@@ -103,6 +103,7 @@ return {
       ts_ls = {},
       rust_analyzer = {},
       hls = {},
+      basedpyright = {},
     }
 
     -- Ensure the servers and tools above are installed
@@ -112,6 +113,7 @@ return {
       'haskell-language-server',
       'rust-analyzer',
       'typescript-language-server',
+      'basedpyright',
     }
 
     require('mason-tool-installer').setup { ensure_installed = ensure_installed }

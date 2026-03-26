@@ -7,6 +7,10 @@ return {
       styles = {
         comments = { italic = false },
       },
+      on_highlights = function(hl, c)
+        -- Make folded lines distinct from diff changes
+        hl.Folded = { fg = c.comment, bg = c.bg_dark }
+      end,
     },
   },
   colorscheme = 'tokyonight-night',

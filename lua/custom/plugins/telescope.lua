@@ -25,6 +25,7 @@ return {
             ['<c-enter>'] = 'to_fuzzy_refine',
             ['<C-j>'] = require('telescope.actions').cycle_history_next,
             ['<C-k>'] = require('telescope.actions').cycle_history_prev,
+            ['<M-p>'] = { '<C-\\><C-n><C-w>w', type = 'command' },
           },
         },
       },
@@ -45,6 +46,21 @@ return {
     vim.keymap.set('n', '<leader>st', builtin.builtin, { desc = '[S]earch [T]elescope pickers' })
     vim.keymap.set({ 'n', 'v' }, '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
     vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
+    vim.keymap.set('n', '<leader>sS', function()
+      builtin.live_grep { additional_args = { '--case-sensitive' } }
+    end, { desc = '[S]earch by grep (case [S]ensitive)' })
+    vim.keymap.set('n', '<leader>sH', function()
+      builtin.live_grep { additional_args = { '--hidden' } }
+    end, { desc = '[S]earch by grep ([H]idden files)' })
+
+    -- Grep/find excluding test files
+    local no_test_globs = { '!**/*test*', '!**/*spec*', '!**/__tests__/**', '!**/__mocks__/**' }
+    vim.keymap.set('n', '<leader>sG', function()
+      builtin.live_grep { glob_pattern = no_test_globs }
+    end, { desc = '[S]earch by [G]rep (no tests)' })
+    vim.keymap.set({ 'n', 'v' }, '<leader>sW', function()
+      builtin.grep_string { glob_pattern = no_test_globs }
+    end, { desc = '[S]earch current [W]ord (no tests)' })
     vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
     vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
     vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
@@ -58,6 +74,11 @@ return {
 
         -- Find references for the word under your cursor.
         vim.keymap.set('n', 'grr', builtin.lsp_references, { buffer = buf, desc = '[G]oto [R]eferences' })
+        vim.keymap.set('n', 'grR', function()
+          builtin.lsp_references {
+            file_ignore_patterns = { '.*test.*', '.*spec.*', '__tests__/', '__mocks__/' },
+          }
+        end, { buffer = buf, desc = '[G]oto [R]eferences (no tests)' })
 
         -- Jump to the implementation of the word under your cursor.
         vim.keymap.set('n', 'gri', builtin.lsp_implementations, { buffer = buf, desc = '[G]oto [I]mplementation' })
@@ -98,5 +119,8 @@ return {
 
     -- Shortcut for searching your Neovim configuration files
     vim.keymap.set('n', '<leader>sn', function() builtin.find_files { cwd = vim.fn.stdpath 'config' } end, { desc = '[S]earch [N]eovim files' })
+
+    -- Search including hidden files
+    vim.keymap.set('n', '<leader>sa', function() builtin.find_files { hidden = true, no_ignore = true } end, { desc = '[S]earch [A]ll files (hidden+ignored)' })
   end,
 }
