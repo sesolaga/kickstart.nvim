@@ -1,7 +1,7 @@
 return {
   'nvim-treesitter/nvim-treesitter',
   config = function()
-    local filetypes = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'typescript', 'tsx', 'vim', 'vimdoc' }
+    local filetypes = { 'bash', 'blade', 'c', 'cpp', 'css', 'diff', 'html', 'javascript', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'php', 'query', 'typescript', 'tsx', 'vim', 'vimdoc' }
     require('nvim-treesitter').install(filetypes)
     vim.api.nvim_create_autocmd('FileType', {
       pattern = filetypes,

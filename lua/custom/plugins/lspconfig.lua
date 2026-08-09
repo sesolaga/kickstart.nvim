@@ -104,6 +104,8 @@ return {
       rust_analyzer = {},
       hls = {},
       basedpyright = {},
+      clangd = {},
+      intelephense = {},
     }
 
     -- Ensure the servers and tools above are installed
@@ -114,6 +116,8 @@ return {
       'rust-analyzer',
       'typescript-language-server',
       'basedpyright',
+      'clangd',
+      'intelephense',
     }
 
     require('mason-tool-installer').setup { ensure_installed = ensure_installed }

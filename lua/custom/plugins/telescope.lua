@@ -11,6 +11,7 @@ return {
     },
     { 'nvim-telescope/telescope-ui-select.nvim' },
     { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
+    { 'nvim-telescope/telescope-live-grep-args.nvim' },
   },
   config = function()
     -- [[ Configure Telescope ]]
@@ -31,32 +32,42 @@ return {
       },
       extensions = {
         ['ui-select'] = { require('telescope.themes').get_dropdown() },
+        live_grep_args = {
+          auto_quoting = true,
+          mappings = {
+            i = {
+              ['<C-e>'] = require('telescope-live-grep-args.actions').quote_prompt(),
+            },
+          },
+        },
       },
     }
 
     -- Enable Telescope extensions if they are installed
     pcall(require('telescope').load_extension, 'fzf')
     pcall(require('telescope').load_extension, 'ui-select')
+    pcall(require('telescope').load_extension, 'live_grep_args')
 
     -- See `:help telescope.builtin`
     local builtin = require 'telescope.builtin'
+    local live_grep_args = require('telescope').extensions.live_grep_args.live_grep_args
     vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
     vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
     vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
     vim.keymap.set('n', '<leader>st', builtin.builtin, { desc = '[S]earch [T]elescope pickers' })
     vim.keymap.set({ 'n', 'v' }, '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
-    vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
+    vim.keymap.set('n', '<leader>sg', live_grep_args, { desc = '[S]earch by [G]rep' })
     vim.keymap.set('n', '<leader>sS', function()
-      builtin.live_grep { additional_args = { '--case-sensitive' } }
+      live_grep_args { additional_args = { '--case-sensitive' } }
     end, { desc = '[S]earch by grep (case [S]ensitive)' })
     vim.keymap.set('n', '<leader>sH', function()
-      builtin.live_grep { additional_args = { '--hidden' } }
+      live_grep_args { additional_args = { '--hidden' } }
     end, { desc = '[S]earch by grep ([H]idden files)' })
 
     -- Grep/find excluding test files
     local no_test_globs = { '!**/*test*', '!**/*spec*', '!**/__tests__/**', '!**/__mocks__/**' }
     vim.keymap.set('n', '<leader>sG', function()
-      builtin.live_grep { glob_pattern = no_test_globs }
+      live_grep_args { additional_args = { '-g', '!**/*test*', '-g', '!**/*spec*', '-g', '!**/__tests__/**', '-g', '!**/__mocks__/**' } }
     end, { desc = '[S]earch by [G]rep (no tests)' })
     vim.keymap.set({ 'n', 'v' }, '<leader>sW', function()
       builtin.grep_string { glob_pattern = no_test_globs }
@@ -109,7 +120,7 @@ return {
       'n',
       '<leader>s/',
       function()
-        builtin.live_grep {
+        live_grep_args {
           grep_open_files = true,
           prompt_title = 'Live Grep in Open Files',
         }

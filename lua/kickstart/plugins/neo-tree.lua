@@ -19,6 +19,7 @@ return {
     { '\\', ':Neotree reveal<CR>', desc = 'NeoTree reveal', silent = true },
   },
   opts = {
+    close_if_last_window = true,
     event_handlers = {
       {
         event = 'file_renamed',
@@ -37,6 +38,18 @@ return {
       window = {
         mappings = {
           ['\\'] = 'close_window',
+          ['gY'] = function(state)
+            local node = state.tree:get_node()
+            local filepath = node:get_id()
+            vim.fn.setreg('+', filepath)
+            vim.notify('Copied path: ' .. filepath)
+          end,
+          ['gy'] = function(state)
+            local node = state.tree:get_node()
+            local filename = node.name
+            vim.fn.setreg('+', filename)
+            vim.notify('Copied name: ' .. filename)
+          end,
         },
         width = 40,
       },

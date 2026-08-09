@@ -8,6 +8,7 @@ return {
     args_allow_single_directory = true,
     args_allow_files_auto_save = true,
     pre_save_cmds = { 'silent! wa', 'Neotree close' },
+    post_restore_cmds = { 'nohlsearch' },
     -- Show session picker when opening nvim in home dir with no args
     no_restore_cmds = {
       function()

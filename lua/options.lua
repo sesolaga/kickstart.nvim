@@ -82,6 +82,26 @@ vim.lsp.handlers['textDocument/rename'] = function(err, result, ctx, config)
   if not err and result then vim.cmd 'wa' end
 end
 
+-- Auto-colorize ANSI codes in git pager buffers
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'git',
+  callback = function(args)
+    local buf = args.buf
+    vim.bo[buf].readonly = false
+    vim.bo[buf].modifiable = true
+    vim.schedule(function()
+      require('baleia').setup().once(buf)
+    end)
+  end,
+})
+
+-- Recognize Laravel Blade templates as their own filetype (so the blade treesitter parser can attach)
+vim.filetype.add {
+  pattern = {
+    ['.*%.blade%.php'] = 'blade',
+  },
+}
+
 -- Folding method
 vim.o.foldmethod = 'expr'
 vim.o.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
