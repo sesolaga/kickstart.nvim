@@ -1,3 +1,5 @@
+-- Configure language servers, completion capabilities, and buffer-local LSP actions.
+-- Route nested Deno projects separately from Node packages in mixed monorepos.
 return {
   'neovim/nvim-lspconfig',
   dependencies = {
@@ -101,6 +103,13 @@ return {
     -- Enable the following language servers
     local servers = {
       ts_ls = {},
+      denols = {
+        root_dir = function(bufnr, on_dir)
+          local root = vim.fs.root(bufnr, { 'deno.json', 'deno.jsonc', 'deno.lock' })
+          if root then on_dir(root) end
+        end,
+        workspace_required = true,
+      },
       rust_analyzer = {},
       hls = {},
       basedpyright = {},
@@ -115,6 +124,7 @@ return {
       'haskell-language-server',
       'rust-analyzer',
       'typescript-language-server',
+      'deno',
       'basedpyright',
       'clangd',
       'intelephense',
