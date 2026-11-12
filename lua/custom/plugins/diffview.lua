@@ -1,3 +1,6 @@
+-- Configure Diffview navigation and collapse the file tree on first load.
+-- Limit LSP work in diff buffers to keep staging responsive.
+
 return {
   'sindrets/diffview.nvim',
   dependencies = {
@@ -36,6 +39,21 @@ return {
       -- optional config
       use_icons = true,
       enhanced_diff_hl = true,
+      file_panel = {
+        win_config = {
+          width = 50,
+        },
+      },
+      hooks = {
+        view_opened = function(view)
+          if view.panel.listing_style ~= 'tree' then return end
+
+          -- File entries load asynchronously after the view opens.
+          view.emitter:once('files_updated', function()
+            if view.panel:is_open() then vim.api.nvim_win_call(view.panel.winid, require('diffview.actions').close_all_folds) end
+          end)
+        end,
+      },
     }
     -- Prevent LSP from doing work on diffview buffers (causes slow staging)
     vim.api.nvim_create_autocmd('LspAttach', {
@@ -51,6 +69,7 @@ return {
     ct._get_and_set_name = function(client, bufnr, name)
       local ok, result = pcall(_orig_get_and_set_name, client, bufnr, name)
       if ok then return result end
+
       return name
     end
   end,
